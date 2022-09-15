@@ -8,7 +8,7 @@ Section 20 covered:
 - [x] Handling Multipart Form Data
 - [x] Handling File Uploads with Multer
 - [x] Configuring Multer to Adjust Filename & Filepath
-- [ ] Filtering Files by Mimetype
+- [x] Filtering Files by Mimetype
 - [ ] Storing File Data in the Database
 - [ ] Serving Images Statically
 - [ ] Downloading Files with Authentication

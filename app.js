@@ -9,7 +9,7 @@ const MongoDBStore = require("connect-mongodb-session")(session);
 const csrf = require("csurf");
 const flash = require("connect-flash");
 const multer = require("multer");
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 const errorControler = require("./controllers/error");
 const User = require("./models/user");
@@ -25,12 +25,24 @@ const csrfProtection = csrf();
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "images");
+    cb(null, "images"); // it means NO ERROR (null) and we will save in the folder named 'images'
   },
   filename: (req, file, cb) => {
-    cb(null, uuidv4() + "-" + file.originalname);
+    cb(null, uuidv4() + "-" + file.originalname); // it means NO ERROR (null) and we will use the filename using a UUID + the original name
   },
 });
+
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === "image/png" ||
+    file.mimetype === "image/jpg" ||
+    file.mimetype === "image/jpeg"
+  ) {
+    cb(null, true); // it means NO ERROR (null) and TRUE we are accepting that file
+  } else {
+    cb(null, false); // it means NO ERROR (null) and FALSE we are not accepting that file
+  }
+};
 
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -44,7 +56,9 @@ const authRoutes = require("./routes/auth");
 app.use(bodyParser.urlencoded({ extended: false }));
 // We are setting a file parser here that will look for a <form> with enctype="multipart/form-data"
 // and will upload a single file (single()) from the field named 'image'
-app.use(multer({ storage: fileStorage }).single("image"));
+app.use(
+  multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
+);
 app.use(express.static(path.join(__dirname, "public")));
 
 //'secret' is used for signing the hash which secretly stores our ID in the cookie. (In production this should be a long string value)
