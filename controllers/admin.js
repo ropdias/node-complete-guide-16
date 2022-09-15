@@ -11,7 +11,6 @@ exports.getAddProduct = (req, res, next) => {
     editing: false,
     oldInput: {
       title: "",
-      imageUrl: "",
       price: "",
       description: "",
     },
@@ -22,11 +21,26 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.postAddProduct = (req, res, next) => {
   const title = req.body.title;
-  const imageUrl = req.file;
+  const image = req.file; // Here you get an object from multer with information from the file uploaded (or undefined if rejected)
   const price = req.body.price;
   const description = req.body.description;
+  if (!image) {
+    // if it's undefined multer declined the incoming file
+    return res.status(422).render("admin/edit-product", {
+      path: "/admin/add-product",
+      pageTitle: "Add Product",
+      editing: false,
+      oldInput: {
+        title: title,
+        price: price,
+        description: description,
+      },
+      errorMessage: "Attached file is not an image.",
+      validationErrors: [],
+    });
+  }
+
   const errors = validationResult(req);
-  console.log(imageUrl);
   if (!errors.isEmpty()) {
     return res.status(422).render("admin/edit-product", {
       path: "/admin/add-product",
@@ -34,7 +48,6 @@ exports.postAddProduct = (req, res, next) => {
       editing: false,
       oldInput: {
         title: title,
-        imageUrl: imageUrl,
         price: price,
         description: description,
       },
@@ -42,6 +55,8 @@ exports.postAddProduct = (req, res, next) => {
       validationErrors: errors.array(),
     });
   }
+
+  const imageUrl = image.path; // Getting the image path to store in the DB and fetch the image later
 
   const product = new Product({
     // _id: new mongoose.Types.ObjectId("630baa5715e38a1befaa4384"), // This is just to test the error in the catch() block
@@ -125,7 +140,7 @@ exports.postEditProduct = (req, res, next) => {
   const prodId = req.body.productId;
   const updatedTitle = req.body.title;
   const updatedPrice = req.body.price;
-  const updatedImageUrl = req.body.imageUrl;
+  const image = req.file;
   const updatedDesc = req.body.description;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -135,7 +150,6 @@ exports.postEditProduct = (req, res, next) => {
       editing: true,
       product: {
         title: updatedTitle,
-        imageUrl: updatedImageUrl,
         price: updatedPrice,
         description: updatedDesc,
         _id: prodId,
@@ -153,10 +167,15 @@ exports.postEditProduct = (req, res, next) => {
       product.title = updatedTitle;
       product.price = updatedPrice;
       product.description = updatedDesc;
-      product.imageUrl = updatedImageUrl;
+      // We will check if a new file image was uploaded to update if we have a new image
+      // Otherwise we will not update this field and we will remain with the old path
+      if (image) {
+        product.imageUrl = image.path;
+      }
       return product
         .save() // if we use the save() here it will not create a new one instead it will update behind the scenes
-        .then(() => { // We have this then() here and not in a chain because we have different returns for different situations
+        .then(() => {
+          // We have this then() here and not in a chain because we have different returns for different situations
           console.log("UPDATED PRODUCT!");
           res.redirect("/admin/products");
         })
