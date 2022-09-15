@@ -1,0 +1,209 @@
+const mongoose = require("mongoose");
+
+const { validationResult } = require("express-validator");
+
+const Product = require("../models/product");
+
+exports.getAddProduct = (req, res, next) => {
+  res.render("admin/edit-product", {
+    pageTitle: "Add Product",
+    path: "/admin/add-product",
+    editing: false,
+    oldInput: {
+      title: "",
+      imageUrl: "",
+      price: "",
+      description: "",
+    },
+    errorMessage: null,
+    validationErrors: [],
+  });
+};
+
+exports.postAddProduct = (req, res, next) => {
+  const title = req.body.title;
+  const imageUrl = req.body.imageUrl;
+  const price = req.body.price;
+  const description = req.body.description;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).render("admin/edit-product", {
+      path: "/admin/add-product",
+      pageTitle: "Add Product",
+      editing: false,
+      oldInput: {
+        title: title,
+        imageUrl: imageUrl,
+        price: price,
+        description: description,
+      },
+      errorMessage: errors.array()[0].msg,
+      validationErrors: errors.array(),
+    });
+  }
+
+  const product = new Product({
+    // _id: new mongoose.Types.ObjectId("630baa5715e38a1befaa4384"), // This is just to test the error in the catch() block
+    title: title,
+    price: price,
+    description: description,
+    imageUrl: imageUrl,
+    // userId: req.user._id // You can get the ._id directly or:
+    userId: req.user, // You can use the object directly and mongoose will get the ._id for you
+  });
+
+  product
+    .save() // This will be provided by mongoose
+    .then((result) => {
+      // Technically we don't get a promise but mongoose still gives us a then method
+      console.log(`Created Product: ${title} with id: ${result._id}`);
+      res.redirect("/admin/products");
+    })
+    .catch((err) => {
+      // And mongoose also gives us a catch method we can call
+
+      // We could return a 500 response and render the page again with a error message:
+      // return res.status(500).render("admin/edit-product", {
+      //   path: "/admin/add-product",
+      //   pageTitle: "Add Product",
+      //   editing: false,
+      //   oldInput: {
+      //     title: title,
+      //     imageUrl: imageUrl,
+      //     price: price,
+      //     description: description,
+      //   },
+      //   errorMessage: "Database operation failed, please try again.",
+      //   validationErrors: [],
+      // });
+
+      // We could also redirect like this to a 500 page:
+      // res.redirect("/500");
+
+      // But we actually should create a new Error and pass it to next() to let Express know that
+      // an error occurred and skip all other middlewares and move right away to an error handling middleware we can define:
+      const error = new Error(err);
+      error.httpStatusCode = 500; // You can add extra information with the error object so that you can use it in the central error middleware
+      return next(error);
+    });
+};
+
+exports.getEditProduct = (req, res, next) => {
+  // We are already coming from a 'edit-product' route but this was added just to show
+  // how to retrieve data from a query param:
+  const editMode = req.query.edit;
+  if (!editMode) {
+    return res.redirect("/");
+  }
+  const prodId = req.params.productId;
+  Product.findById(prodId)
+    .then((product) => {
+      // If we don't have a product and it's undefined:
+      if (!product) {
+        // We could retrieve a error page (better user experience) but for now we will just redirect:
+        return res.redirect("/");
+      }
+      res.render("admin/edit-product", {
+        pageTitle: "Edit Product",
+        path: "/admin/add-product",
+        editing: editMode,
+        product: product,
+        errorMessage: null,
+        validationErrors: [],
+      });
+    })
+    .catch((err) => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
+};
+
+exports.postEditProduct = (req, res, next) => {
+  // Fetch information from the product
+  const prodId = req.body.productId;
+  const updatedTitle = req.body.title;
+  const updatedPrice = req.body.price;
+  const updatedImageUrl = req.body.imageUrl;
+  const updatedDesc = req.body.description;
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(422).render("admin/edit-product", {
+      path: "/admin/add-product",
+      pageTitle: "Edit Product",
+      editing: true,
+      product: {
+        title: updatedTitle,
+        imageUrl: updatedImageUrl,
+        price: updatedPrice,
+        description: updatedDesc,
+        _id: prodId,
+      },
+      errorMessage: errors.array()[0].msg,
+      validationErrors: errors.array(),
+    });
+  }
+
+  Product.findById(prodId) // findById() returns a mongoose object where we can call .save()
+    .then((product) => {
+      if (product.userId.toString() !== req.user._id.toString()) {
+        return res.redirect("/");
+      }
+      product.title = updatedTitle;
+      product.price = updatedPrice;
+      product.description = updatedDesc;
+      product.imageUrl = updatedImageUrl;
+      return product
+        .save() // if we use the save() here it will not create a new one instead it will update behind the scenes
+        .then(() => { // We have this then() here and not in a chain because we have different returns for different situations
+          console.log("UPDATED PRODUCT!");
+          res.redirect("/admin/products");
+        })
+        .catch((err) => {
+          const error = new Error(err);
+          error.httpStatusCode = 500;
+          return next(error);
+        });
+    })
+    .catch((err) => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
+};
+
+exports.getProducts = (req, res, next) => {
+  Product.find({ userId: req.user._id })
+    // .select("title price -_id") // only the title and price, and explicit excluding the _id
+    // .populate("userId", "name") // only the field "name" (the field _id will also be populated)
+    .then((products) => {
+      res.render("admin/products", {
+        prods: products,
+        pageTitle: "Admin Products",
+        path: "/admin/products",
+      });
+    })
+    .catch((err) => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
+};
+
+exports.postDeleteProduct = (req, res, next) => {
+  // Fetch information from the product
+  const prodId = req.body.productId;
+  // It's not removing from every cart yet !
+  Product.deleteOne({ _id: prodId, userId: req.user._id })
+    .then((result) => {
+      if (result.deletedCount > 0) {
+        console.log("Deleted product and removed it from every cart !"); // It's not removing from every cart yet !
+      }
+      res.redirect("/admin/products");
+    })
+    .catch((err) => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
+};
