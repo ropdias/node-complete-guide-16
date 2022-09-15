@@ -8,6 +8,7 @@ const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const csrf = require("csurf");
 const flash = require("connect-flash");
+const multer = require('multer');
 
 const errorControler = require("./controllers/error");
 const User = require("./models/user");
@@ -31,6 +32,9 @@ const authRoutes = require("./routes/auth");
 // bodyParser.urlencoded() will do all the request body parsing we had to do manually (with req.on("data", (chunk) => {}) e req.on("end", () => {}))
 // It won't parse all kind of bodys (like JSON and files) but will parse bodies sent through a form.
 app.use(bodyParser.urlencoded({ extended: false }));
+// We are setting a file parser here that will look for a <form> with enctype="multipart/form-data"
+// and will upload a single file (single()) from the field named 'image'
+app.use(multer({dest: 'images'}).single('image'));
 app.use(express.static(path.join(__dirname, "public")));
 
 //'secret' is used for signing the hash which secretly stores our ID in the cookie. (In production this should be a long string value)
