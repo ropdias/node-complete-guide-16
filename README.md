@@ -10,7 +10,7 @@ Section 20 covered:
 - [x] Configuring Multer to Adjust Filename & Filepath
 - [x] Filtering Files by Mimetype
 - [x] Storing File Data in the Database
-- [ ] Serving Images Statically
+- [x] Serving Images Statically
 - [ ] Downloading Files with Authentication
 - [ ] Setting File Type Headers
 - [ ] Restricting File Access

@@ -60,6 +60,7 @@ app.use(
   multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
 );
 app.use(express.static(path.join(__dirname, "public")));
+app.use('/images', express.static(path.join(__dirname, "images")));
 
 //'secret' is used for signing the hash which secretly stores our ID in the cookie. (In production this should be a long string value)
 //'resave' means that the session will not be saved on every request that is done, but only if something changed in the session. (this improves performance)
