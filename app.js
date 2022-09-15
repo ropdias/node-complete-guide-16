@@ -8,7 +8,8 @@ const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
 const csrf = require("csurf");
 const flash = require("connect-flash");
-const multer = require('multer');
+const multer = require("multer");
+const { v4: uuidv4 } = require('uuid');
 
 const errorControler = require("./controllers/error");
 const User = require("./models/user");
@@ -22,6 +23,15 @@ const store = new MongoDBStore({
 // We can pass an object to csrf({}) to configure some stuff like "cookie" (to store the secret in a cookie instead of a session (default))
 const csrfProtection = csrf();
 
+const fileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "images");
+  },
+  filename: (req, file, cb) => {
+    cb(null, uuidv4() + "-" + file.originalname);
+  },
+});
+
 app.set("view engine", "ejs");
 app.set("views", "views");
 
@@ -34,7 +44,7 @@ const authRoutes = require("./routes/auth");
 app.use(bodyParser.urlencoded({ extended: false }));
 // We are setting a file parser here that will look for a <form> with enctype="multipart/form-data"
 // and will upload a single file (single()) from the field named 'image'
-app.use(multer({dest: 'images'}).single('image'));
+app.use(multer({ storage: fileStorage }).single("image"));
 app.use(express.static(path.join(__dirname, "public")));
 
 //'secret' is used for signing the hash which secretly stores our ID in the cookie. (In production this should be a long string value)
@@ -74,10 +84,10 @@ app.use((req, res, next) => {
       next();
     })
     .catch((err) => {
-       // If you throw an Error here you will not reach the express error handling middleware
-       // Because this is ASYNC code and you need to use next(new Error(err)) instead.
-       // Throwing an error will only reach the express error handling middleware in SYNC code
-       // throw new Error(err);
+      // If you throw an Error here you will not reach the express error handling middleware
+      // Because this is ASYNC code and you need to use next(new Error(err)) instead.
+      // Throwing an error will only reach the express error handling middleware in SYNC code
+      // throw new Error(err);
       next(new Error(err));
     });
 });
@@ -97,12 +107,10 @@ app.use((error, req, res, next) => {
   // res.redirect("/500"); // This can lead to infinite loop if you thrown an Error in SYNC code
   // We can also render a page here or return some JSON data here
   // res.status(error.httpStatusCode).render(...);
-  res
-    .status(500)
-    .render("500", {
-      pageTitle: "Error!",
-      path: "/500",
-    });
+  res.status(500).render("500", {
+    pageTitle: "Error!",
+    path: "/500",
+  });
 });
 
 mongoose

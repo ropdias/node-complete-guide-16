@@ -7,7 +7,7 @@ Section 20 covered:
 - [x] Adding a File Picker to the Frontend
 - [x] Handling Multipart Form Data
 - [x] Handling File Uploads with Multer
-- [ ] Configuring Multer to Adjust Filename & Filepath
+- [x] Configuring Multer to Adjust Filename & Filepath
 - [ ] Filtering Files by Mimetype
 - [ ] Storing File Data in the Database
 - [ ] Serving Images Statically
