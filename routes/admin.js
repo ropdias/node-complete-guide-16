@@ -24,7 +24,6 @@ router.post(
       .trim()
       .isString()
       .isLength({ min: 3 }),
-    body("imageUrl", "Invalid image URL").isURL(),
     body("price", "Invalid price. (Should be a currency number)").isCurrency(),
     body("description", "Invalid description (Should have length > 3 and < 400")
       .trim()
