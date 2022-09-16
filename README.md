@@ -14,7 +14,7 @@ Section 20 covered:
 - [x] Downloading Files with Authentication
 - [x] Setting File Type Headers
 - [x] Restricting File Access
-- [ ] Streaming Data vs Preloading Data
+- [x] Streaming Data vs Preloading Data
 - [ ] Using PDFKit for .pdf Generation
 - [ ] Generating .pdf Files with Order Data
 - [ ] Deleting Files

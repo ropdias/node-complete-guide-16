@@ -163,20 +163,47 @@ exports.getInvoice = (req, res, next) => {
       }
       const invoiceName = "invoice-" + orderId + ".pdf";
       const invoicePath = path.join("data", "invoices", invoiceName);
-      fs.readFile(invoicePath, (err, data) => {
+      // fs.readFile(invoicePath, (err, data) => {
+      //   if (err) {
+      //     return next(err);
+      //   }
+      //   // Here we can set the 'Content-Type' header so the client can know what the extension of the file
+      //   res.setHeader("Content-Type", "application/pdf");
+      //   // We can also set another header, the 'Content-Disposition' that we can set how the content should be served to the client:
+      //   res.setHeader(
+      //     "Content-Disposition",
+      //     'inline; filename="' + invoiceName + '"'
+      //   );
+      //   // You can change the behaviour to download the file by changing 'inline' with 'attachment'
+      //   // res.setHeader('Content-Disposition', 'attachment; filename="' + invoiceName + '"');
+      //   res.send(data);
+      // });
+
+      // The recommended way to get your file data is by using a STREAM (instead of downloading all the data in memory), especially for bigger files:
+      // const file = fs.createReadStream(invoicePath);
+      // res.setHeader("Content-Type", "application/pdf");
+      // res.setHeader(
+      //   "Content-Disposition",
+      //   'attachment; filename="' + invoiceName + '"'
+      // );
+      // // You need to use the pipe() method from the file returned from fs.createReadStream() to forward what is read with
+      // // that stream to the response (because the response object is a writable stream)
+      // file.pipe(res);
+
+      // https://stackoverflow.com/questions/37400024/nodejs-stream-vs-sendfile
+      // Instead of using fs.createReadStream() we should use res.sendFile():
+      const options = {
+        root: ".",
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": 'attachment; filename="' + invoiceName + '"',
+        },
+      };
+      // The method invokes the callback function fn(err) when the transfer is complete or when an error occurs.
+      res.sendFile(invoicePath, options, (err) => {
         if (err) {
           return next(err);
         }
-        // Here we can set the 'Content-Type' header so the client can know what the extension of the file
-        res.setHeader("Content-Type", "application/pdf");
-        // We can also set another header, the 'Content-Disposition' that we can set how the content should be served to the client:
-        res.setHeader(
-          "Content-Disposition",
-          'inline; filename="' + invoiceName + '"'
-        );
-        // You can change the behaviour to download the file by changing 'inline' with 'attachment'
-        // res.setHeader('Content-Disposition', 'attachment; filename="' + invoiceName + '"');
-        res.send(data);
       });
     })
     .catch((err) => {
