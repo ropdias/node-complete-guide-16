@@ -11,7 +11,7 @@ Section 20 covered:
 - [x] Filtering Files by Mimetype
 - [x] Storing File Data in the Database
 - [x] Serving Images Statically
-- [ ] Downloading Files with Authentication
+- [x] Downloading Files with Authentication
 - [ ] Setting File Type Headers
 - [ ] Restricting File Access
 - [ ] Streaming Data vs Preloading Data
