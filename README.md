@@ -12,7 +12,7 @@ Section 20 covered:
 - [x] Storing File Data in the Database
 - [x] Serving Images Statically
 - [x] Downloading Files with Authentication
-- [ ] Setting File Type Headers
+- [x] Setting File Type Headers
 - [ ] Restricting File Access
 - [ ] Streaming Data vs Preloading Data
 - [ ] Using PDFKit for .pdf Generation

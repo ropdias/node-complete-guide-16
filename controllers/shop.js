@@ -159,6 +159,12 @@ exports.getInvoice = (req, res, next) => {
     if (err) {
       return next(err);
     }
+    // Here we can set the 'Content-Type' header so the client can know what the extension of the file
+    res.setHeader('Content-Type', 'application/pdf');
+    // We can also set another header, the 'Content-Disposition' that we can set how the content should be served to the client:
+    res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
+    // You can change the behaviour to download the file by changing 'inline' with 'attachment'
+    // res.setHeader('Content-Disposition', 'attachment; filename="' + invoiceName + '"');
     res.send(data);
   });
 };
