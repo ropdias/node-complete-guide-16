@@ -15,7 +15,7 @@ Section 20 covered:
 - [x] Setting File Type Headers
 - [x] Restricting File Access
 - [x] Streaming Data vs Preloading Data
-- [ ] Using PDFKit for .pdf Generation
+- [x] Using PDFKit for .pdf Generation
 - [ ] Generating .pdf Files with Order Data
 - [ ] Deleting Files
 - [ ] Fixing Invoice Links

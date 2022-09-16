@@ -1,6 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
+const PDFDocument = require("pdfkit");
+
 const Product = require("../models/product");
 const Order = require("../models/order");
 
@@ -163,6 +165,19 @@ exports.getInvoice = (req, res, next) => {
       }
       const invoiceName = "invoice-" + orderId + ".pdf";
       const invoicePath = path.join("data", "invoices", invoiceName);
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        'inline; filename="' + invoiceName + '"'
+      );
+      // Creating a new PDF File instead of sending from the server:
+      const pdfDoc = new PDFDocument();
+      pdfDoc.pipe(fs.createWriteStream(invoicePath)); // Here we pipe the output into a writable file stream and we will store it on the server
+      pdfDoc.pipe(res); // Here we also pipe the output to the client in the response
+      pdfDoc.text("Hello World");
+      pdfDoc.end(); // When we call end the writable streams will be closed so to say, or will know that you are done writing
+
       // fs.readFile(invoicePath, (err, data) => {
       //   if (err) {
       //     return next(err);
@@ -192,19 +207,19 @@ exports.getInvoice = (req, res, next) => {
 
       // https://stackoverflow.com/questions/37400024/nodejs-stream-vs-sendfile
       // Instead of using fs.createReadStream() we should use res.sendFile():
-      const options = {
-        root: ".",
-        headers: {
-          "Content-Type": "application/pdf",
-          "Content-Disposition": 'attachment; filename="' + invoiceName + '"',
-        },
-      };
-      // The method invokes the callback function fn(err) when the transfer is complete or when an error occurs.
-      res.sendFile(invoicePath, options, (err) => {
-        if (err) {
-          return next(err);
-        }
-      });
+      // const options = {
+      //   root: ".",
+      //   headers: {
+      //     "Content-Type": "application/pdf",
+      //     "Content-Disposition": 'attachment; filename="' + invoiceName + '"',
+      //   },
+      // };
+      // // The method invokes the callback function fn(err) when the transfer is complete or when an error occurs.
+      // res.sendFile(invoicePath, options, (err) => {
+      //   if (err) {
+      //     return next(err);
+      //   }
+      // });
     })
     .catch((err) => {
       const error = new Error(err);
