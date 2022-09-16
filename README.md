@@ -13,7 +13,7 @@ Section 20 covered:
 - [x] Serving Images Statically
 - [x] Downloading Files with Authentication
 - [x] Setting File Type Headers
-- [ ] Restricting File Access
+- [x] Restricting File Access
 - [ ] Streaming Data vs Preloading Data
 - [ ] Using PDFKit for .pdf Generation
 - [ ] Generating .pdf Files with Order Data

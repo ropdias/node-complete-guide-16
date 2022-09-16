@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 const Product = require("../models/product");
 const Order = require("../models/order");
@@ -153,18 +153,35 @@ exports.getOrders = (req, res, next) => {
 
 exports.getInvoice = (req, res, next) => {
   const orderId = req.params.orderId;
-  const invoiceName = 'invoice-' + orderId + '.pdf';
-  const invoicePath = path.join('data', 'invoices', invoiceName);
-  fs.readFile(invoicePath, (err, data) => {
-    if (err) {
-      return next(err);
-    }
-    // Here we can set the 'Content-Type' header so the client can know what the extension of the file
-    res.setHeader('Content-Type', 'application/pdf');
-    // We can also set another header, the 'Content-Disposition' that we can set how the content should be served to the client:
-    res.setHeader('Content-Disposition', 'inline; filename="' + invoiceName + '"');
-    // You can change the behaviour to download the file by changing 'inline' with 'attachment'
-    // res.setHeader('Content-Disposition', 'attachment; filename="' + invoiceName + '"');
-    res.send(data);
-  });
+  Order.findById(orderId)
+    .then((order) => {
+      if (!order) {
+        return next(new Error("No order found."));
+      }
+      if (order.user.userId.toString() !== req.user._id.toString()) {
+        return next(new Error("Unauthorized"));
+      }
+      const invoiceName = "invoice-" + orderId + ".pdf";
+      const invoicePath = path.join("data", "invoices", invoiceName);
+      fs.readFile(invoicePath, (err, data) => {
+        if (err) {
+          return next(err);
+        }
+        // Here we can set the 'Content-Type' header so the client can know what the extension of the file
+        res.setHeader("Content-Type", "application/pdf");
+        // We can also set another header, the 'Content-Disposition' that we can set how the content should be served to the client:
+        res.setHeader(
+          "Content-Disposition",
+          'inline; filename="' + invoiceName + '"'
+        );
+        // You can change the behaviour to download the file by changing 'inline' with 'attachment'
+        // res.setHeader('Content-Disposition', 'attachment; filename="' + invoiceName + '"');
+        res.send(data);
+      });
+    })
+    .catch((err) => {
+      const error = new Error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+    });
 };
