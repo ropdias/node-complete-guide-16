@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const fileHelper = require("../util/file");
 
 const { validationResult } = require("express-validator");
 
@@ -170,6 +171,7 @@ exports.postEditProduct = (req, res, next) => {
       // We will check if a new file image was uploaded to update if we have a new image
       // Otherwise we will not update this field and we will remain with the old path
       if (image) {
+        fileHelper.deleteFile(product.imageUrl); // Here i'm firing this function and I'm not caring about the result
         product.imageUrl = image.path;
       }
       return product
@@ -210,11 +212,21 @@ exports.getProducts = (req, res, next) => {
     });
 };
 
+// Lecture 333
+// There is a bug in here, the app crashes if there is no image to delete because it throws an error
+// And there is another bug in here, if we can't find a product we return next and do another then() but deletedCount is undefined
+// And it's not removing from every cart yet.
 exports.postDeleteProduct = (req, res, next) => {
   // Fetch information from the product
   const prodId = req.body.productId;
-  // It's not removing from every cart yet !
-  Product.deleteOne({ _id: prodId, userId: req.user._id })
+  Product.findById(prodId)
+    .then((product) => {
+      if (!product) {
+        return next(new Error("Product not found."));
+      }
+      fileHelper.deleteFile(product.imageUrl);
+      return Product.deleteOne({ _id: prodId, userId: req.user._id });
+    })
     .then((result) => {
       if (result.deletedCount > 0) {
         console.log("Deleted product and removed it from every cart !"); // It's not removing from every cart yet !

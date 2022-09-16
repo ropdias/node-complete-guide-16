@@ -17,7 +17,7 @@ Section 20 covered:
 - [x] Streaming Data vs Preloading Data
 - [x] Using PDFKit for .pdf Generation
 - [x] Generating .pdf Files with Order Data
-- [ ] Deleting Files
+- [x] Deleting Files
 - [ ] Fixing Invoice Links
 
 
