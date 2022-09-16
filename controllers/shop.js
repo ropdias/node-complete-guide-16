@@ -175,7 +175,21 @@ exports.getInvoice = (req, res, next) => {
       const pdfDoc = new PDFDocument();
       pdfDoc.pipe(fs.createWriteStream(invoicePath)); // Here we pipe the output into a writable file stream and we will store it on the server
       pdfDoc.pipe(res); // Here we also pipe the output to the client in the response
-      pdfDoc.text("Hello World");
+      pdfDoc.fontSize(26).text("Invoice", {
+        underline: true,
+      });
+      pdfDoc.text("------------------------");
+      let totalPrice = 0;
+      order.products.forEach((prod) => {
+        totalPrice += prod.quantity * prod.product.price;
+        pdfDoc
+          .fontSize(14)
+          .text(
+            `${prod.product.title} - ${prod.quantity} x $${prod.product.price}`
+          );
+      });
+      pdfDoc.text("------------------------");
+      pdfDoc.fontSize(20).text(`Total Price: $${totalPrice}`);
       pdfDoc.end(); // When we call end the writable streams will be closed so to say, or will know that you are done writing
 
       // fs.readFile(invoicePath, (err, data) => {

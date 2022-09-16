@@ -16,7 +16,7 @@ Section 20 covered:
 - [x] Restricting File Access
 - [x] Streaming Data vs Preloading Data
 - [x] Using PDFKit for .pdf Generation
-- [ ] Generating .pdf Files with Order Data
+- [x] Generating .pdf Files with Order Data
 - [ ] Deleting Files
 - [ ] Fixing Invoice Links
 
