@@ -18,7 +18,7 @@ Section 20 covered:
 - [x] Using PDFKit for .pdf Generation
 - [x] Generating .pdf Files with Order Data
 - [x] Deleting Files
-- [ ] Fixing Invoice Links
+- [x] Fixing Invoice Links
 
 
 
