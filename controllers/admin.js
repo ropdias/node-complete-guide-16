@@ -4,6 +4,7 @@ const fileHelper = require("../util/file");
 const { validationResult } = require("express-validator");
 
 const Product = require("../models/product");
+const User = require("../models/user");
 
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
@@ -212,26 +213,53 @@ exports.getProducts = (req, res, next) => {
     });
 };
 
-// Lecture 333
-// There is a bug in here, the app crashes if there is no image to delete because it throws an error
-// And there is another bug in here, if we can't find a product we return next and do another then() but deletedCount is undefined
-// And it's not removing from every cart yet.
+// https://stackoverflow.com/questions/41292316/how-do-i-await-multiple-promises-in-parallel-without-fail-fast-behavior
+// https://v8.dev/features/promise-combinators#promise.allsettled
+// https://stackoverflow.com/questions/5010288/how-to-make-a-function-wait-until-a-callback-has-been-called-using-node-js
+// Basically the solution was to wrap the fileHelper.deleteFile() into a Promise
+// And wait the two functions with Promise.allSettled()
 exports.postDeleteProduct = (req, res, next) => {
-  // Fetch information from the product
-  const prodId = req.body.productId;
+  const prodId = req.body.productId; // Fetch information from the product
   Product.findById(prodId)
     .then((product) => {
       if (!product) {
         return next(new Error("Product not found."));
       }
-      fileHelper.deleteFile(product.imageUrl);
-      return Product.deleteOne({ _id: prodId, userId: req.user._id });
-    })
-    .then((result) => {
-      if (result.deletedCount > 0) {
-        console.log("Deleted product and removed it from every cart !"); // It's not removing from every cart yet !
-      }
-      res.redirect("/admin/products");
+      const promiseDeleteImage = fileHelper.deleteFile(product.imageUrl);
+      const promiseDeleteProduct = Product.deleteOne({
+        _id: prodId,
+        userId: req.user._id,
+      })
+        .then((result) => {
+          if (result.deletedCount > 0) {
+            console.log(
+              `Deleted product ! (Total deleted: ${result.deletedCount})`
+            );
+          }
+          return User.updateMany(
+            {},
+            { $pull: { "cart.items": { productId: prodId } } }
+          );
+        })
+        .then((result) => {
+          if (result.modifiedCount > 0) {
+            console.log(
+              `Removed product from every cart ! (Total modified: ${result.modifiedCount})`
+            );
+          }
+        });
+      return Promise.allSettled([
+        promiseDeleteImage,
+        promiseDeleteProduct,
+      ]).then((results) => {
+        if (results[0].status !== "fulfilled") {
+          next(new Error("promiseDeleteImage failed !"));
+        } else if (results[1].status !== "fulfilled") {
+          next(new Error("promiseDeleteProduct failed !"));
+        } else {
+          res.redirect("/admin/products");
+        }
+      });
     })
     .catch((err) => {
       const error = new Error(err);
